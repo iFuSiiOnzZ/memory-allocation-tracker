@@ -22,7 +22,7 @@ DEL /Q %PDBFiles%*.ilk 2>NUL
 
 :: Compiler flags
 SET CommonCompilerFlags= /nologo /Od /Z7 /W4 /Fd%PDBFiles% /Fo%IntermediatePath% /Fe%ExePath% /Isrc\headers
-SET Defines=-D_DEBUG
+SET Defines=-D_DEBUG -DWIN64
 
 :: Linker flags
 SET CommonLinkerFlags= User32.lib

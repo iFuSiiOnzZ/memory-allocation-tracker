@@ -26,11 +26,11 @@ static debug_memory_record *GlobalLinkedListHead = NULL;
 static mutex_ticket GlobalMutex = { 0 };
 
 ///// Platform specific functions
-inline unsigned long long AtomicAddU64(unsigned long long volatile *Value, unsigned long long Addend);
+static inline unsigned long long AtomicAddU64(unsigned long long volatile *Value, unsigned long long Addend);
 static void SetCallStack(debug_memory_record *DebugRecord);
 
-inline void BeginMutex(mutex_ticket *Mutex);
-inline void EndMutex(mutex_ticket *Mutex);
+static inline void BeginMutex(mutex_ticket *Mutex);
+static inline void EndMutex(mutex_ticket *Mutex);
 
 ///// General functions
 static void bzero(void *s1, size_t n)
@@ -113,7 +113,7 @@ void debug_print_imp(void)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef WIN64
+#if defined(WIN64) || defined(WIN32)
     #include <windows.h>
     #include <immintrin.h>
 
@@ -151,18 +151,18 @@ void debug_print_imp(void)
         SymCleanup(GetCurrentProcess());
     }
 
-    inline unsigned long long AtomicAddU64(unsigned long long volatile *Value, unsigned long long Addend)
+    static inline unsigned long long AtomicAddU64(unsigned long long volatile *Value, unsigned long long Addend)
     {
         return _InterlockedExchangeAdd64((__int64 volatile *)Value, Addend);
     }
 
-    inline void BeginMutex(mutex_ticket *Mutex)
+    static inline void BeginMutex(mutex_ticket *Mutex)
     {
         unsigned long long Ticket = AtomicAddU64(&Mutex->Ticket, 1);
         while (Ticket != Mutex->Serving) { _mm_pause(); }
     }
 
-    inline void EndMutex(mutex_ticket *Mutex)
+    static inline void EndMutex(mutex_ticket *Mutex)
     {
         AtomicAddU64(&Mutex->Serving, 1);
     }
@@ -176,24 +176,24 @@ void debug_print_imp(void)
         #define STRINGIFY(x) STRINGIFY_(x)
     #endif
 
-    #pragma message (__FILE__ "(" STRINGIFY(__LINE__) "): warning: No multithreading and callstack support")
+    #pragma message (__FILE__ "(" STRINGIFY(__LINE__) "): warning: No multithreading and advanced callstack support")
 
     static void SetCallStack(debug_memory_record *DebugRecord)
     {
         UNUSED(DebugRecord);
     }
 
-    inline unsigned long long AtomicAddU64(unsigned long long volatile *Value, unsigned long long Addend)
+    static inline unsigned long long AtomicAddU64(unsigned long long volatile *Value, unsigned long long Addend)
     {
         UNUSED(Value); UNUSED(Addend);
     }
 
-    inline void BeginMutex(mutex_ticket *Mutex)
+    static inline void BeginMutex(mutex_ticket *Mutex)
     {
         UNUSED(Mutex);
     }
 
-    inline void EndMutex(mutex_ticket *Mutex)
+    static inline void EndMutex(mutex_ticket *Mutex)
     {
         UNUSED(Mutex);
     }

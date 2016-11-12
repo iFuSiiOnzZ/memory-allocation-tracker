@@ -15,7 +15,7 @@
 #else
     #define debug_malloc(size) malloc(size)
 
-    #define debug_free(mem) free_(mem)
+    #define debug_free(mem) free(mem)
 
     #define debug_print()
 #endif

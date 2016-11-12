@@ -25,7 +25,7 @@ SET CommonCompilerFlags= /nologo /Od /Z7 /W4 /Fd%PDBFiles% /Fo%IntermediatePath%
 SET Defines=-D_DEBUG -DWIN64
 
 :: Linker flags
-SET CommonLinkerFlags= User32.lib
+SET CommonLinkerFlags= User32.lib Kernel32.lib
 
 :: Compile
 call cl %CommonCompilerFlags% %Defines% build.cpp /link %CommonLinkerFlags%

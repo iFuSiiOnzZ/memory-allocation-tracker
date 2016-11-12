@@ -45,10 +45,10 @@ void *debug_malloc_imp(size_t size, char *FileName, int FileLine)
     if (!Memory) return Memory;
 
     debug_memory_record *NewRecord = (debug_memory_record *) malloc(sizeof(debug_memory_record));
-    bzero(NewRecord, sizeof(debug_memory_record));
+    if(!NewRecord) return Memory;
 
+    bzero(NewRecord, sizeof(debug_memory_record));
     NewRecord->Memory = Memory;
-    SetCallStack(NewRecord);
 
     NewRecord->FileName = FileName;
     NewRecord->FileLine = FileLine;
@@ -58,6 +58,7 @@ void *debug_malloc_imp(size_t size, char *FileName, int FileLine)
 
     BeginMutex(&GlobalMutex);
         GlobalLinkedListHead = NewRecord;
+        SetCallStack(NewRecord);
     EndMutex(&GlobalMutex);
 
     return Memory;

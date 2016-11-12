@@ -5,9 +5,18 @@ Small API that keeps track of the of the allocated memory in the system <br />
 ### How it works
 
 Include `debug_memory.h` (tested in Window 10 x64 under Visual C++ Build Tools 2015 - standalone C++ tools) <br />
-`__debug_malloc__(size_t)` allocate memory, overrides _malloc_ in debug <br />
-`__debug_free__(void *)` free memory, overrides _free_ in debug <br />
-`__debug_print__()` print the allocated memory to stdout 
+`debug_malloc(size_t)` allocate memory, overrides _malloc_ in debug <br />
+`debug_free(void *)` free memory, overrides _free_ in debug <br />
+`debug_print()` print the allocated memory to stdout <br />
+
+Each memory allocation generats a node in a linked list with file name, file line, size of the allocation and call stack. 
+When memory is free the node coresponding to the allocation is searched and remove from the list. 
+To achieve thread safety a spin lock is used making each thread accessing sequentially.
+
+### Remarks
+
+At the moment call stack and multithreading safety are only available for Windows platform, 
+otherwise a warning will be shown at compilation time showing that those features aren't available.
 
 
 ### Output

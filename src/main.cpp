@@ -1,5 +1,5 @@
 
-#include <debug_memory.h>
+#include "debug_memory\debug_memory.h"
 
 #include <windows.h>    /* HANDLE, CreateThread */
 #include <stdlib.h>     /* srand, rand */
@@ -55,7 +55,7 @@ unsigned long __stdcall thread_free(void *p)
 int main(int argc, char *argv[])
 {
     UNUSED(argc); UNUSED(argv);
-    srand (time(NULL));
+    srand ((int) time(NULL));
 
     leak_function_5();
     debug_malloc(32);

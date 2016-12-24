@@ -1,4 +1,4 @@
-#include <debug_memory.h>
+#include "debug_memory.h"
 #include <stdio.h>
 
 typedef struct debug_memory_record
@@ -37,6 +37,24 @@ static void bzero(void *s1, size_t n)
 {
     char *t = (char *)s1;
     while (n-- != 0) *t++ = 0;
+}
+
+void *debug_realloc_imp(void *Mem, size_t size, char *FileName, int FileLine)
+{
+    debug_memory_record *SearchNode = GlobalLinkedListHead;
+
+    while(SearchNode != NULL && SearchNode->Memory != Mem)
+    {
+        SearchNode = SearchNode->Prev;
+    }
+
+    SearchNode->Memory = realloc(Mem, size);
+    SearchNode->MemorySize = size;
+
+    SearchNode->FileName = FileName;
+    SearchNode->FileLine = FileLine;
+
+    return SearchNode->Memory;
 }
 
 void *debug_malloc_imp(size_t size, char *FileName, int FileLine)
@@ -106,11 +124,9 @@ void debug_print_imp(void)
         Node = Node->Prev;
     }
 
-
     printf("====================================================================\n");
     printf("  >>>  %zd bytes in %zd allocations\n", TotalBytes, RemainingAllocations);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 

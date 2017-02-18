@@ -41,6 +41,7 @@ static void bzero(void *s1, size_t n)
 
 void *debug_realloc_imp(void *Mem, size_t size, char *FileName, int FileLine)
 {
+    if(!Mem) return debug_malloc_imp(size, FileName, FileLine);
     debug_memory_record *SearchNode = GlobalLinkedListHead;
 
     while(SearchNode != NULL && SearchNode->Memory != Mem)

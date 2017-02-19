@@ -39,25 +39,6 @@ static void bzero(void *s1, size_t n)
     while (n-- != 0) *t++ = 0;
 }
 
-void *debug_realloc_imp(void *Mem, size_t size, char *FileName, int FileLine)
-{
-    if(!Mem) return debug_malloc_imp(size, FileName, FileLine);
-    debug_memory_record *SearchNode = GlobalLinkedListHead;
-
-    while(SearchNode != NULL && SearchNode->Memory != Mem)
-    {
-        SearchNode = SearchNode->Prev;
-    }
-
-    SearchNode->Memory = realloc(Mem, size);
-    SearchNode->MemorySize = size;
-
-    SearchNode->FileName = FileName;
-    SearchNode->FileLine = FileLine;
-
-    return SearchNode->Memory;
-}
-
 void *debug_malloc_imp(size_t size, char *FileName, int FileLine)
 {
     void *Memory = malloc(size);
@@ -81,6 +62,25 @@ void *debug_malloc_imp(size_t size, char *FileName, int FileLine)
     EndMutex(&GlobalMutex);
 
     return Memory;
+}
+
+void *debug_realloc_imp(void *Mem, size_t size, char *FileName, int FileLine)
+{
+    if(!Mem) return debug_malloc_imp(size, FileName, FileLine);
+    debug_memory_record *SearchNode = GlobalLinkedListHead;
+
+    while(SearchNode != NULL && SearchNode->Memory != Mem)
+    {
+        SearchNode = SearchNode->Prev;
+    }
+
+    SearchNode->Memory = realloc(Mem, size);
+    SearchNode->MemorySize = size;
+
+    SearchNode->FileName = FileName;
+    SearchNode->FileLine = FileLine;
+
+    return SearchNode->Memory;
 }
 
 void debug_free_imp(void *Mem)

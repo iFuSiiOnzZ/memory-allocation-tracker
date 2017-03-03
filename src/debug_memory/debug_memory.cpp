@@ -1,6 +1,15 @@
+/*
+    Project includes
+*/
 #include "debug_memory.h"
-#include <stdio.h>
 
+/*
+    STDLib/OS includes
+*/
+#include <immintrin.h> /* _mm_pause */
+#include <stdio.h>     /* printf, snprinf */
+
+///// Data structures
 typedef struct debug_memory_record
 {
     void *Memory;
@@ -29,14 +38,22 @@ static mutex_ticket GlobalMutex = { 0 };
 static inline unsigned long long AtomicAddU64(unsigned long long volatile *Value, unsigned long long Addend);
 static void SetCallStack(debug_memory_record *DebugRecord);
 
-static inline void BeginMutex(mutex_ticket *Mutex);
-static inline void EndMutex(mutex_ticket *Mutex);
-
 ///// General functions
 static void bzero(void *s1, size_t n)
 {
     char *t = (char *)s1;
     while (n-- != 0) *t++ = 0;
+}
+
+static inline void BeginMutex(mutex_ticket *Mutex)
+{
+    unsigned long long Ticket = AtomicAddU64(&Mutex->Ticket, 1);
+    while (Ticket != Mutex->Serving) { _mm_pause(); }
+}
+
+static inline void EndMutex(mutex_ticket *Mutex)
+{
+    AtomicAddU64(&Mutex->Serving, 1);
 }
 
 void *debug_malloc_imp(size_t size, char *FileName, int FileLine)
@@ -133,8 +150,6 @@ void debug_print_imp(void)
 
 #if defined(WIN64) || defined(WIN32)
     #include <windows.h>
-    #include <immintrin.h>
-
     #include <Dbghelp.h>
     #pragma comment(lib, "Dbghelp.lib")
 
@@ -173,47 +188,29 @@ void debug_print_imp(void)
     {
         return _InterlockedExchangeAdd64((__int64 volatile *)Value, Addend);
     }
-
-    static inline void BeginMutex(mutex_ticket *Mutex)
-    {
-        unsigned long long Ticket = AtomicAddU64(&Mutex->Ticket, 1);
-        while (Ticket != Mutex->Serving) { _mm_pause(); }
-    }
-
-    static inline void EndMutex(mutex_ticket *Mutex)
-    {
-        AtomicAddU64(&Mutex->Serving, 1);
-    }
 #else
-    #ifndef UNUSED
-        #define UNUSED(x) (void)x
-    #endif
-
-    #ifndef STRINGIFY
-        #define STRINGIFY_(x) #x
-        #define STRINGIFY(x) STRINGIFY_(x)
-    #endif
-
-    #pragma message (__FILE__ "(" STRINGIFY(__LINE__) "): warning: No multithreading and advanced callstack support")
+    /* Note(Andrei): Need to be compiled with -rdynamic option */
+    #include <execinfo.h> /* backtrace, backtrace_symbols */
 
     static void SetCallStack(debug_memory_record *DebugRecord)
     {
-        UNUSED(DebugRecord);
+        void *callers[48] = { 0 };
+        int nCaptured = backtrace(callers, 1024);
+
+        char **Symbol = backtrace_symbols(callers, nCaptured);
+        DebugRecord->CallStackSize = nCaptured - 2;
+
+        for (int i = 0; i < nCaptured - 2; i++)
+        {
+            snprintf(DebugRecord->CallStack[i], 1024, "%24s", Symbol[i + 2]);
+        }
+
+        free(Symbol);
     }
 
     static inline unsigned long long AtomicAddU64(unsigned long long volatile *Value, unsigned long long Addend)
     {
-        UNUSED(Value); UNUSED(Addend);
-    }
-
-    static inline void BeginMutex(mutex_ticket *Mutex)
-    {
-        UNUSED(Mutex);
-    }
-
-    static inline void EndMutex(mutex_ticket *Mutex)
-    {
-        UNUSED(Mutex);
+        return __sync_fetch_and_add(Value, Addend);
     }
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////

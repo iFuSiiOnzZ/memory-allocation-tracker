@@ -148,10 +148,14 @@ void debug_print_imp(void)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(WIN64) || defined(WIN32)
-    #include <windows.h>
-    #include <Dbghelp.h>
-    #pragma comment(lib, "Dbghelp.lib")
+#if defined(WIN64) || defined(WIN32) || defined(_WINDOWS)
+    #pragma warning(push)
+        // NOTE(Andrei): Dbghelp.h(1544): warning C4091: 'typedef ', Dbghelp.h(3190): warning C4091: 'typedef '
+        #pragma warning(disable: 4091)
+
+        #include <Dbghelp.h>
+        #pragma comment(lib, "Dbghelp.lib")
+    #pragma warning(pop)
 
     static void SetCallStack(debug_memory_record *DebugRecord)
     {

@@ -1,4 +1,4 @@
-# Memory Allocation Traker
+# Memory Allocation Tracker
 
 Small API that keeps track of the of the allocated memory in the system <br />
 

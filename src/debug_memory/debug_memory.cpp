@@ -65,15 +65,14 @@ void *debug_malloc_imp(size_t size, char *FileName, int FileLine)
     if(!NewRecord) return Memory;
 
     bzero(NewRecord, sizeof(debug_memory_record));
+    NewRecord->MemorySize = size;
     NewRecord->Memory = Memory;
 
     NewRecord->FileName = FileName;
     NewRecord->FileLine = FileLine;
 
-    NewRecord->MemorySize = size;
-    NewRecord->Prev = GlobalLinkedListHead;
-
     BeginMutex(&GlobalMutex);
+        NewRecord->Prev = GlobalLinkedListHead;
         GlobalLinkedListHead = NewRecord;
         SetCallStack(NewRecord);
     EndMutex(&GlobalMutex);
@@ -136,7 +135,7 @@ void debug_print_imp(void)
         for(unsigned int i = 0; i < Node->CallStackSize; ++i) printf("          % 2d %s\n", i, Node->CallStack[i]);
         if(Node->CallStackSize) printf("\n");
 
-        TotalBytes += Node->MemorySize; 
+        TotalBytes += Node->MemorySize;
         ++RemainingAllocations;
 
         Node = Node->Prev;

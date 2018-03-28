@@ -27,5 +27,11 @@ SET Defines=-D_DEBUG -DWIN64
 :: Linker flags
 SET CommonLinkerFlags= User32.lib Kernel32.lib
 
+:: Check if compiler is set
+WHERE cl >nul 2>nul
+IF %ERRORLEVEL% NEQ 0 (
+    CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
+)
+
 :: Compile
 call cl %CommonCompilerFlags% %Defines% build.cpp /link %CommonLinkerFlags%
